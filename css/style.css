@@ -60,6 +60,10 @@ body {
     animation: static-overlay-wrapper-animation 0.5s forwards ease;
 }
 
+.end-static-overlay-wrapper {
+    animation: static-overlay-wrapper-animation 0.25s reverse forwards ease;
+}
+
 .text-wrapper {
     margin-top: 6vh;
     margin-left: 20vw;
