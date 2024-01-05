@@ -75,6 +75,43 @@ body {
     font-size: 4vh;
 }
 
+.bottom-info {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+
+    font-family: DeterminationMono, monospace;
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.make-your-own {
+    margin: 8px;
+    align-self: end;
+
+    font-size: 3vh;
+}
+
+.make-your-own a {
+    color: #505050;
+}
+
+.credits {
+    display: flex;
+    flex-direction: column;
+    margin: 8px;
+    color: #505050;
+
+    font-size: 2vh;
+}
+
+.credits a {
+    color: #505050;
+}
+
 @media (orientation: portrait) {
     .portrait-wrapper {
         width: 80%;
@@ -85,5 +122,13 @@ body {
         margin-right: 5vw;
 
         font-size: 4vw;
+    }
+
+    .make-your-own {
+        font-size: 3vw;
+    }
+
+    .credits {
+        font-size: 2vw;
     }
 }

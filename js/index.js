@@ -10,7 +10,7 @@ const TEXT_WRAPPER_ELEMENT = document.getElementById("text-wrapper");
 const UPDATE_FREQUENCY = 1/30;
 
 const INITIAL_STATIC_DELAY = 0.8;
-const MESSAGE_END_STATIC_DELAY = 1;
+const MESSAGE_END_STATIC_DELAY = 1.5;
 
 const TAPE_OVERLAY_TARGET_OPACITY_UPDATE_FREQUENCY = 1/2;
 const TAPE_OVERLAY_TARGET_OPACITY_MINIMUM = 0.1;
@@ -57,7 +57,7 @@ const PORTRAIT_PATHS = {
     "No Hands": "assets/portraits/chujin/no-hands.png",
     "Take Glasses": "assets/portraits/chujin/take-glasses.png",
     "Take Glasses Stressed": "assets/portraits/chujin/take-glasses-stressed.png",
-    "No Eyes": "assets/portraits/chujin/no-eyes.png",
+    "Creepy": "assets/portraits/chujin/creepy.png",
     "Turn Left": "assets/portraits/chujin/turn-left.png",
     "Turn Right": "assets/portraits/chujin/turn-right.png",
     "Turn Right Finger Up": "assets/portraits/chujin/turn-right-finger-up.png",
@@ -85,8 +85,10 @@ document.addEventListener('click', function (event) {
 
 function init() {
     setPortraitImage(PORTRAIT_PATHS[DEFAULT_PORTRAIT]);
+    let script = loadScriptFromUrl();
+
     setTimeout(() => {
-        typewriterSetScript("This is [Pause 0.2][Portrait Look Down]*ugh*[Pause 0.2][Portrait Normal] Chujin.\n\n[Portrait Misery]...I have not made much progress,\nand my time is about to run out.\n\n[Portrait Normal]That is all.");
+        typewriterSetScript(script);
     }, INITIAL_STATIC_DELAY * 1000);
 }
 
@@ -94,6 +96,12 @@ function update(delta) {
     tapeOverlayUpdateOpacity(delta);
     typewriterUpdate(delta);
     TIME += delta;
+}
+
+// SCRIPT LOADING
+
+function loadScriptFromUrl() {
+    return parseShareableUrl(window.location.href);
 }
 
 // TAPE OVERLAY
