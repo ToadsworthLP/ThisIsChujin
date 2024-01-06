@@ -7,10 +7,70 @@
     <link rel="stylesheet" type="text/css" href="css/editor.css">
 </head>
 <body>
+
 <h1>Create Your Own Chujin Tapes!</h1>
-<textarea id="script-input" style="width: 50%; height: 50vh"></textarea><br>
-<button onclick="generateButtonClicked()">Create!</button>
+<p>~This site is still under construction, but it should work! Hopefully! Shoot me a tweet at @ToadsworthLP if it breaks! Guide down below.~</p>
+<textarea class="script-input" id="script-input">
+This is Chujin.
+
+[Portrait Take Glasses]This is an editable text field.
+Any text entered here will be turned into a tape resembling the ones I used to make.
+
+[Portrait Normal]When you're done, click the "Create!" button to copy a shareable link to your tape to your clipboard.
+
+Scroll down for more info.
+That is all.
+</textarea><br>
+<button class="create-button" onclick="generateButtonClicked()">Create!</button><br>
 <div id="copied-message" class="copied-message" style="display: none">Link copied to clipboard!</div>
+<div class="spacer"></div>
+
+<h2>Guide</h2>
+<p>
+    Normal text will appear in the tape just as it was written here.
+    A single line break will result in a line break, while two line breaks back to back marks a page break.
+    Pages will be shown one after another, in order.
+</p>
+<p>
+    Once you finish writing, click the "Create!" button to copy a link to your tape to the clipboard.
+    This link can be pasted anywhere, and when clicked, lead to a page showing your tape.
+</p>
+<p>
+    There are also some special directions that can be placed anywhere in the text to trigger some kind of action:
+</p>
+<ul>
+    <li>
+        [Pause DURATION]: Pause for the specified time
+        (replace DURATION with the duration in seconds, e.g. [Pause 0.5] to pause half a second)
+    </li>
+    <li>
+        [Portrait NAME]: Change the character portrait
+        (replace NAME with the name of the portrait to show, e.g. [Portrait Misery] to make Chujin feel horrible)
+        (portrait list <a href="#portraits">here</a>)
+    </li>
+</ul>
+
+<h3 id="portraits">Addendum: Character Portraits</h3>
+<ul>
+    <li>Normal</li>
+    <li>Stressed</li>
+    <li>Anxious</li>
+    <li>Anxious Stressed</li>
+    <li>Look Down Stressed</li>
+    <li>No Hands</li>
+    <li>Take Glasses</li>
+    <li>Take Glasses Stressed</li>
+    <li>Creepy</li>
+    <li>Turn Left</li>
+    <li>Turn Right</li>
+    <li>Turn Right Finder Up</li>
+    <li>Look Down</li>
+    <li>Look Left</li>
+    <li>Lower Head</li>
+    <li>Lower Head Lower</li>
+    <li>Misery</li>
+</ul>
+
 <script src="js/codec.js"></script>
 <script src="js/editor.js"></script>
 </body>
