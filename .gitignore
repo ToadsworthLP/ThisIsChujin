@@ -2,3 +2,5 @@
 .idea/
 
 worker/node_modules/
+
+worker/.wrangler/

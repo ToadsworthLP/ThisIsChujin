@@ -2,7 +2,7 @@ const FORMAT_VERSION = 0;
 const SHARE_LINK_BASE_URL = "https://home.toadsworth.com:25567/index.html";
 
 function createShareableUrl(script) {
-    return `${SHARE_LINK_BASE_URL}?v=${FORMAT_VERSION}&s=${encode(script)}`;
+    return encodeURI(`${SHARE_LINK_BASE_URL}?v=${FORMAT_VERSION}&script=${encode(script)}`);
 }
 
 function parseShareableUrl(url) {
