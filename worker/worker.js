@@ -8,22 +8,32 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import * as http from "http";
-
 export default {
     async fetch(request, env, ctx) {
-        let options = {
-            host: 'www.google.com',
-            port: 80,
-            path: '/index.html'
-        };
+        const staticResourceBaseUrl = "https://toadsworthlp.github.io/ThisIsChujin/";
+        const stringToReplaceWithPlayUrl = "{PLAY_TAPE_REQUEST_URL}"
+        const targetRequestUrls = ["/", "/index.html"];
 
-        http.get(options, function(res) {
-            console.log("Got response: " + res.statusCode);
-        }).on('error', function(e) {
-            console.log("Got error: " + e.message);
+        const requestUrl = new URL(request.url);
+        const staticRequestFullUrl = `${staticResourceBaseUrl}${requestUrl.pathname + requestUrl.search}`;
+
+        const staticSiteResponse = await fetch(staticRequestFullUrl, {
+            method: "GET"
         });
 
-        return new Response('Hello World!');
+        let finalResponse;
+        if(targetRequestUrls.some( url => url === requestUrl.pathname)) { // Only replace it in the target site
+            let staticSiteResponseBody = (await staticSiteResponse.text());
+            let updatedBody = staticSiteResponseBody.replaceAll(stringToReplaceWithPlayUrl, staticRequestFullUrl);
+            finalResponse = new Response(updatedBody, {
+                status: staticSiteResponse.status,
+                statusText: staticSiteResponse.statusText,
+                headers: staticSiteResponse.headers
+            });
+        } else {
+            finalResponse = staticSiteResponse;
+        }
+
+        return finalResponse;
     },
 };
