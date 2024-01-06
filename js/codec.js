@@ -11,9 +11,9 @@ function parseShareableUrl(url) {
 
     let version = parameters.get("v");
     if(version == FORMAT_VERSION) {
-        if(!parameters.has("s")) throw "Failed to load script: No \'s\' query parameter found";
+        if(!parameters.has("script")) throw "Failed to load script: No \'script\' query parameter found";
 
-        let encodedScript = parameters.get("s");
+        let encodedScript = parameters.get("script");
         return decode(encodedScript);
     } else {
         throw `Failed to load script: Unsupported format version: ${version}`;
