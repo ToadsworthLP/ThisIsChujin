@@ -1,5 +1,5 @@
 const FORMAT_VERSION = 0;
-const SHARE_LINK_BASE_URL = "https://home.toadsworth.com:25567/index.html";
+const SHARE_LINK_BASE_URL = "https://chujin.toadsworth.com/";
 
 function createShareableUrl(script) {
     return encodeURI(`${SHARE_LINK_BASE_URL}?v=${FORMAT_VERSION}&script=${encode(script)}`);
