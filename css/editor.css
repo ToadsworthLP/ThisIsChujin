@@ -23,6 +23,14 @@ a {
     color: lightgrey;
 }
 
+.button-row {
+    display: flex;
+}
+
+.copied-message {
+    margin-left: 16px;
+}
+
 .spacer {
     margin-top: 64px;
 }
