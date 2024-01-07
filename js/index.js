@@ -523,8 +523,6 @@ function typewriterNextPage() {
     if(typewriterPages.length === 0) return;
 
     if(typewriterCurrentPage + 1 < typewriterPages.length) {
-        console.log("a");
-
         typewriterCurrentPage++;
 
         typewriterSetPage(typewriterPages[typewriterCurrentPage]);
