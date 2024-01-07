@@ -52,7 +52,7 @@ body {
 
 @keyframes static-overlay-wrapper-animation {
     0%      { opacity: 1; }
-    50%     { opacity: 1; }
+    75%     { opacity: 1; }
     100%    { opacity: 0; }
 }
 
@@ -110,6 +110,60 @@ body {
 
 .credits a {
     color: #505050;
+}
+
+.control-buttons {
+    opacity: 0.5;
+
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+
+    display: flex;
+    justify-content: flex-end;
+}
+
+.toggle-button {
+    display: block;
+    height: 100%;
+    width: 2.75rem;
+    margin-right: 8px;
+
+    color: white;
+}
+
+.toggle-button input {
+    margin: 0;
+    position: absolute;
+    opacity: 0;
+}
+
+.toggle-button-icon {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    width: 100%;
+}
+
+.replay-container {
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1;
+
+    color: white;
+    font-family: DeterminationMono, monospace;
+    font-size: 4vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+.replay-icon {
+    margin-top: 16px;
+    width: 15%;
 }
 
 @media (orientation: portrait) {

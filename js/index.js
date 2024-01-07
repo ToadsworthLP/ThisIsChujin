@@ -2,8 +2,17 @@
 
 const PORTRAIT_ELEMENT = document.getElementById("portrait");
 const TAPE_OVERLAY_ELEMENT = document.getElementById("tape-overlay");
+const INITIAL_STATIC_OVERLAY_WRAPPER_ELEMENT = document.getElementById("initial-static-overlay-wrapper")
 const END_STATIC_OVERLAY_WRAPPER_ELEMENT = document.getElementById("end-static-overlay-wrapper");
 const TEXT_WRAPPER_ELEMENT = document.getElementById("text-wrapper");
+const REPLAY_CONTAINER_ELEMENT = document.getElementById("replay-container");
+
+//const PLAY_TOGGLE_CHECKBOX_ELEMENT = document.getElementById("play-toggle");
+//const PLAY_TOGGLE_PLAY_ICON_ELEMENT = document.getElementById("play-toggle-play-icon");
+//const PLAY_TOGGLE_PAUSE_ICON_ELEMENT = document.getElementById("play-toggle-pause-icon");
+const MUTE_TOGGLE_CHECKBOX_ELEMENT = document.getElementById("mute-toggle");
+const MUTE_TOGGLE_MUTE_ICON_ELEMENT = document.getElementById("mute-toggle-mute-icon");
+const MUTE_TOGGLE_UNMUTE_ICON_ELEMENT = document.getElementById("mute-toggle-unmute-icon");
 
 // MISC CONSTANTS
 
@@ -11,11 +20,14 @@ const UPDATE_FREQUENCY = 1/30;
 
 const INITIAL_STATIC_DELAY = 0.8;
 const MESSAGE_END_STATIC_DELAY = 1.5;
+const MESSAGE_END_REPLAY_OVERLAY_DELAY = 3.0;
 
 const TAPE_OVERLAY_TARGET_OPACITY_UPDATE_FREQUENCY = 1/2;
 const TAPE_OVERLAY_TARGET_OPACITY_MINIMUM = 0.1;
 const TAPE_OVERLAY_TARGET_OPACITY_MAXIMUM = 0.7;
-const TAPE_OVERLAY_OPACITY_LERP_SPEED = 10;
+const TAPE_OVERLAY_OPACITY_LERP_SPEED = 15;
+
+// TYPEWRITER CONFIGURATION
 
 const TYPEWRITER_AUTO_ADVANCE_DELAY = 2;
 const TYPEWRITER_DEFAULT_PAUSE = 1/30;
@@ -69,9 +81,42 @@ const PORTRAIT_PATHS = {
     "Misery": "https://toadsworthlp.github.io/ThisIsChujin/assets/portraits/chujin/misery.png",
 }
 
+// AUDIO PATHS
+
+const DEFAULT_BGM_PATH = "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/bgm/nothing-but-the-truth.mp3";
+const DEFAULT_TALK_SOUND_PATH = "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/talk/chujin.wav";
+const STATIC_SOUND_PATH = "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/sfx/static.wav";
+const GLITCH_SOUND_PATH = "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/sfx/glitch.wav";
+
+// AUDIO CONFIGURATION
+
+const BGM_BASE_VOLUME = 1.0;
+const TALK_SOUND_BASE_VOLUME = 1.0;
+const STATIC_SOUND_BASE_VOLUME = 0.5;
+const GLITCH_SOUND_BASE_VOLUME = 0.3;
+
+const INITIAL_STATIC_SOUND_DURATION = 0.3;
+
+const TALK_SOUND_EXCLUDED_CHARACTERS = [' ', '.']
+
+// AUDIO INSTANCES
+
+let STATIC_SOUND_INSTANCE;
+let GLITCH_SOUND_INSTANCE;
+let BGM_INSTANCE;
+let TALK_SOUND_INSTANCE;
+
+// COOKIE NAMES
+
+const AUDIO_MUTED_COOKIE_NAME = "muted";
+
 // GLOBAL VARIABLES
 
-let TIME = 0;
+let TIME = 0
+let MESSAGE_OVER = false;
+let AUDIO_MUTED = false;
+let ALLOW_REPLAY = false;
+let DISABLE_PROCEED_INPUT = false;
 
 // LIFECYCLE FUNCTIONS
 
@@ -86,7 +131,20 @@ document.addEventListener('click', function (event) {
 
 function init() {
     setPortraitImage(PORTRAIT_PATHS[DEFAULT_PORTRAIT]);
-    let script = loadScriptFromUrl();
+    initAudio();
+    let script;
+
+    try {
+        script = loadScriptFromUrl();
+        onScriptLoaded(script)
+    } catch (e) {
+        STATIC_SOUND_INSTANCE.play();
+        return;
+    }
+}
+
+function onScriptLoaded(script) {
+    playInitialStaticSound(INITIAL_STATIC_SOUND_DURATION);
 
     setTimeout(() => {
         typewriterSetScript(script);
@@ -99,10 +157,126 @@ function update(delta) {
     TIME += delta;
 }
 
+function reset() {
+    INITIAL_STATIC_OVERLAY_WRAPPER_ELEMENT.style.animation = "none";
+    INITIAL_STATIC_OVERLAY_WRAPPER_ELEMENT.offsetHeight;
+    INITIAL_STATIC_OVERLAY_WRAPPER_ELEMENT.style.animation = null;
+
+    END_STATIC_OVERLAY_WRAPPER_ELEMENT.style.display = "none";
+
+    TIME = 0;
+    MESSAGE_OVER = false;
+    ALLOW_REPLAY = false;
+    DISABLE_PROCEED_INPUT = false;
+
+    typewriterReset();
+    tapeOverlayReset();
+
+    init();
+}
+
 // SCRIPT LOADING
 
 function loadScriptFromUrl() {
     return parseShareableUrl(window.location.href);
+}
+
+// BUTTONS
+
+function toggleMuted(checkboxElement) {
+    if(checkboxElement.checked) {
+        MUTE_TOGGLE_MUTE_ICON_ELEMENT.style.display = "unset";
+        MUTE_TOGGLE_UNMUTE_ICON_ELEMENT.style.display = "none";
+
+        setAudioMuted(true);
+    } else {
+        MUTE_TOGGLE_MUTE_ICON_ELEMENT.style.display = "none";
+        MUTE_TOGGLE_UNMUTE_ICON_ELEMENT.style.display = "unset";
+
+        setAudioMuted(false);
+    }
+}
+
+function clickRestartButton() {
+    if(ALLOW_REPLAY) {
+        REPLAY_CONTAINER_ELEMENT.style.display = "none";
+        reset();
+    }
+}
+
+function toggleAutoAdvance(checkboxElement) {
+    // TODO add this (using setAutoAdvance())
+}
+
+// AUDIO
+
+let currentGlobalVolume;
+let bgmStartInterval;
+
+function initAudio() {
+    AUDIO_MUTED = isAudioMutedByCookie();
+    MUTE_TOGGLE_CHECKBOX_ELEMENT.checked = AUDIO_MUTED;
+    toggleMuted(MUTE_TOGGLE_CHECKBOX_ELEMENT);
+
+    if(STATIC_SOUND_INSTANCE === undefined) STATIC_SOUND_INSTANCE = new Audio(STATIC_SOUND_PATH);
+    if(GLITCH_SOUND_INSTANCE === undefined) GLITCH_SOUND_INSTANCE = new Audio(GLITCH_SOUND_PATH);
+    if(BGM_INSTANCE === undefined) BGM_INSTANCE = new Audio(DEFAULT_BGM_PATH);
+    if(TALK_SOUND_INSTANCE === undefined) TALK_SOUND_INSTANCE = new Audio(DEFAULT_TALK_SOUND_PATH);
+
+    setAudioVolume(AUDIO_MUTED ? 0 : 1);
+
+    BGM_INSTANCE.loop = true;
+
+    attemptToStartBgm();
+    bgmStartInterval = setInterval(attemptToStartBgm, 500);
+}
+
+function attemptToStartBgm() {
+    if(!AUDIO_MUTED) {
+        BGM_INSTANCE.play();
+
+        if(BGM_INSTANCE.currentTime > 0.01) {
+            clearInterval(bgmStartInterval);
+        }
+    }
+}
+
+function playInitialStaticSound() {
+    STATIC_SOUND_INSTANCE.play();
+
+    setTimeout(() => {
+        STATIC_SOUND_INSTANCE.volume = 0;
+    }, INITIAL_STATIC_SOUND_DURATION * 1000)
+}
+
+function playEndStaticSound() {
+    STATIC_SOUND_INSTANCE.loop = false;
+    STATIC_SOUND_INSTANCE.play();
+    STATIC_SOUND_INSTANCE.volume = STATIC_SOUND_BASE_VOLUME * currentGlobalVolume;
+}
+
+function setAudioVolume(volume) {
+    currentGlobalVolume = volume;
+
+    if(STATIC_SOUND_INSTANCE !== undefined) STATIC_SOUND_INSTANCE.volume = STATIC_SOUND_BASE_VOLUME * volume;
+    if(GLITCH_SOUND_INSTANCE !== undefined) GLITCH_SOUND_INSTANCE.volume = GLITCH_SOUND_BASE_VOLUME * volume;
+    if(BGM_INSTANCE !== undefined) BGM_INSTANCE.volume = BGM_BASE_VOLUME * volume;
+    if(TALK_SOUND_INSTANCE !== undefined) TALK_SOUND_INSTANCE.volume = TALK_SOUND_BASE_VOLUME * volume;
+}
+
+function setAudioMuted(muted) {
+    if(muted) {
+        setAudioVolume(0.0);
+        setCookie(AUDIO_MUTED_COOKIE_NAME, "true", 365);
+    } else {
+        setAudioVolume(1.0);
+        setCookie(AUDIO_MUTED_COOKIE_NAME, "false", 365);
+    }
+}
+
+function isAudioMutedByCookie() {
+    let cookie = getCookie(AUDIO_MUTED_COOKIE_NAME)
+    return cookie === "true";
 }
 
 // TAPE OVERLAY
@@ -115,7 +289,12 @@ function tapeOverlayUpdateOpacity(delta) {
         tapeOverlayUpdateTargetOpacity();
 
         if(tapeOverlayTargetOpacity > TAPE_OVERLAY_ELEMENT.style.opacity) {
-            TAPE_OVERLAY_ELEMENT.style.opacity = lerp(TAPE_OVERLAY_ELEMENT.style.opacity, tapeOverlayTargetOpacity, 0.5);
+            TAPE_OVERLAY_ELEMENT.style.opacity = lerp(TAPE_OVERLAY_ELEMENT.style.opacity, tapeOverlayTargetOpacity, 0.75);
+
+            if(!MESSAGE_OVER) {
+                GLITCH_SOUND_INSTANCE.currentTime = 0;
+                GLITCH_SOUND_INSTANCE.play();
+            }
         }
 
         tapeOverlayNextTargetOpacityUpdate += TAPE_OVERLAY_TARGET_OPACITY_UPDATE_FREQUENCY;
@@ -127,6 +306,11 @@ function tapeOverlayUpdateOpacity(delta) {
 function tapeOverlayUpdateTargetOpacity() {
     // I couldn't explain what's going on here either, I wrote this by pure trial and error
     tapeOverlayTargetOpacity = Math.max(Math.min(1 - Math.pow(Math.random() * 4, 2), TAPE_OVERLAY_TARGET_OPACITY_MAXIMUM), TAPE_OVERLAY_TARGET_OPACITY_MINIMUM);
+}
+
+function tapeOverlayReset() {
+    tapeOverlayNextTargetOpacityUpdate = 0;
+    tapeOverlayTargetOpacity = 0;
 }
 
 // PORTRAIT
@@ -144,6 +328,8 @@ let typewriterCurrentPage = 0;
 let typewriterTime = 0;
 let typewriterRemainingPause = 0;
 let typewriterAutoAdvanceTimeout = undefined;
+let typewriterEndStaticDisplayTimeout = undefined;
+let typewriterReplayDisplayTimeout = undefined;
 
 class TypewriterCommand {
     constructor(time, command) {
@@ -153,8 +339,6 @@ class TypewriterCommand {
 }
 
 function typewriterSetScript(script) {
-    typewriterCurrentPage = 0;
-
     let rawPages = script.split('\n\n');
     for (let i = 0; i < rawPages.length; i++) {
         let page = rawPages[i];
@@ -164,6 +348,22 @@ function typewriterSetScript(script) {
     }
 
     if(typewriterPages.length > 0) typewriterSetPage(typewriterPages[0]);
+}
+
+function typewriterReset() {
+    typewriterPages = [];
+    typewriterCommandBuffer = [];
+    typewriterPageFinished = false;
+    typewriterCurrentPage = 0;
+    typewriterTime = 0;
+    typewriterRemainingPause = 0;
+
+    clearTimeout(typewriterAutoAdvanceTimeout);
+    clearTimeout(typewriterEndStaticDisplayTimeout);
+    clearTimeout(typewriterReplayDisplayTimeout);
+
+    typewriterAutoAdvanceTimeoutRunningAlready = false;
+    typewriterMessageEndTimeoutRunningAlready = false;
 }
 
 function typewriterSetPage(text) {
@@ -239,7 +439,7 @@ function typewriterGetPause(character) {
 }
 
 function typewriterShouldPlaySound(character) {
-    return false; // TODO check if a talk sound should be played for the current character
+    return !TALK_SOUND_EXCLUDED_CHARACTERS.includes(character)
 }
 
 function typewriterUpdate(delta) {
@@ -261,6 +461,14 @@ function typewriterUpdate(delta) {
     typewriterTime += delta;
 }
 
+function setAutoAdvance(enabled) {
+    if(enabled) {
+        typewriterAutoAdvance();
+    } else {
+        clearTimeout(typewriterAutoAdvanceTimeout);
+    }
+}
+
 // TYPEWRITER COMMANDS
 
 function typewriterPrintCommand(element) {
@@ -280,7 +488,10 @@ function typewriterPageFinishedCommand() {
 }
 
 function typewriterPlayTalkSoundCommand() {
-    return () => {  }; // TODO play the talk sound
+    return () => {
+        TALK_SOUND_INSTANCE.currentTime = 0;
+        TALK_SOUND_INSTANCE.play();
+    };
 }
 
 function typewriterAddPauseCommand(pauseDuration) {
@@ -290,13 +501,13 @@ function typewriterAddPauseCommand(pauseDuration) {
 // TYPEWRITER PROCESS PROCEED INPUT
 
 function typewriterProceedPressed() {
-    if(typewriterPageFinished) {
-        typewriterNextPage();
-    } else {
-        typewriterSkipToEndOfPage();
+    if(!DISABLE_PROCEED_INPUT) {
+        if(typewriterPageFinished) {
+            typewriterNextPage();
+        } else {
+            typewriterSkipToEndOfPage();
+        }
     }
-
-    clearTimeout(typewriterAutoAdvanceTimeout);
 }
 
 function typewriterSkipToEndOfPage() {
@@ -309,9 +520,13 @@ function typewriterSkipToEndOfPage() {
 }
 
 function typewriterNextPage() {
-    typewriterCurrentPage++;
+    if(typewriterPages.length === 0) return;
 
-    if(typewriterCurrentPage < typewriterPages.length) {
+    if(typewriterCurrentPage + 1 < typewriterPages.length) {
+        console.log("a");
+
+        typewriterCurrentPage++;
+
         typewriterSetPage(typewriterPages[typewriterCurrentPage]);
         typewriterPageFinished = false;
     } else {
@@ -319,19 +534,68 @@ function typewriterNextPage() {
     }
 }
 
+let typewriterAutoAdvanceTimeoutRunningAlready = false;
 function typewriterAutoAdvance() {
-    typewriterAutoAdvanceTimeout = setTimeout(() => {
-        typewriterNextPage();
-    }, TYPEWRITER_AUTO_ADVANCE_DELAY * 1000)
+    if(!typewriterAutoAdvanceTimeoutRunningAlready) {
+        clearTimeout(typewriterAutoAdvanceTimeout);
+
+        typewriterAutoAdvanceTimeout = setTimeout(() => {
+            typewriterNextPage();
+            typewriterAutoAdvanceTimeoutRunningAlready = false;
+        }, TYPEWRITER_AUTO_ADVANCE_DELAY * 1000)
+
+        typewriterAutoAdvanceTimeoutRunningAlready = true;
+    }
 }
 
+let typewriterMessageEndTimeoutRunningAlready = false;
 function typewriterMessageEnd() {
-    setTimeout(() => {
-        END_STATIC_OVERLAY_WRAPPER_ELEMENT.style.display = "unset";
-    }, MESSAGE_END_STATIC_DELAY * 1000);
+    if(!typewriterMessageEndTimeoutRunningAlready) {
+        MESSAGE_OVER = true;
+
+        clearTimeout(typewriterEndStaticDisplayTimeout);
+        clearTimeout(typewriterReplayDisplayTimeout);
+
+        typewriterEndStaticDisplayTimeout = setTimeout(() => {
+            playEndStaticSound();
+            END_STATIC_OVERLAY_WRAPPER_ELEMENT.style.display = "unset";
+        }, MESSAGE_END_STATIC_DELAY * 1000);
+
+        typewriterReplayDisplayTimeout = setTimeout(() => {
+            REPLAY_CONTAINER_ELEMENT.style.display = "flex";
+            typewriterMessageEndTimeoutRunningAlready = false;
+            ALLOW_REPLAY = true;
+            DISABLE_PROCEED_INPUT = true;
+        }, MESSAGE_END_REPLAY_OVERLAY_DELAY * 1000);
+
+        typewriterMessageEndTimeoutRunningAlready = true;
+    }
 }
 
 // UTILITY FUNCTIONS
+
 function lerp(a, b, t){
     return (1 - t) * a + t * b;
+}
+
+function setCookie(cname, cvalue, exdays) {
+    const d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    let expires = "expires="+d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+    let name = cname + "=";
+    let ca = document.cookie.split(';');
+    for(let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }

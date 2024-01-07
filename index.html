@@ -21,11 +21,15 @@
     <div class="portrait-wrapper">
         <img id="portrait" class="portrait-layer" src="https://toadsworthlp.github.io/ThisIsChujin/assets/portraits/chujin/normal.png" alt="Portrait of the character Chujin from Undertale Yellow">
         <div id="tape-overlay" class="portrait-layer tape-overlay"></div>
-        <div id="static-overlay-wrapper" class="static-overlay-wrapper portrait-layer">
+        <div id="initial-static-overlay-wrapper" class="static-overlay-wrapper portrait-layer">
             <div class="static-overlay"></div>
         </div>
         <div id="end-static-overlay-wrapper" class="end-static-overlay-wrapper portrait-layer" style="display: none">
             <div class="static-overlay"></div>
+        </div>
+        <div id="replay-container" class="portrait-layer replay-container" onclick="clickRestartButton()" style="display: none">
+            Click to restart
+            <img class="replay-icon" src="https://toadsworthlp.github.io/ThisIsChujin/assets/icons/replay.png">
         </div>
     </div>
     <div id="text-wrapper" class="text-wrapper"></div>
@@ -35,7 +39,23 @@
         <span>Created by <a href="https://twitter.com/ToadsworthLP" target="_blank" rel="noopener noreferrer">@ToadsworthLP</a></span>
         <span>Character/art by <a href="https://twitter.com/UndertaleYellow" target="_blank" rel="noopener noreferrer">@UndertaleYellow</a></span>
     </div>
-    <div class="make-your-own"><a href="editor.html" target="_blank" rel="noopener noreferrer">Make your own!</a></div>
+</div>
+<div class="control-buttons">
+    <!--
+    <label class="toggle-button">
+        <input id="play-toggle" type="checkbox">
+        <img id="play-toggle-pause-icon" class="toggle-button-icon" src="https://toadsworthlp.github.io/ThisIsChujin/assets/icons/pause.png">
+        <img id="play-toggle-play-icon" class="toggle-button-icon" src="https://toadsworthlp.github.io/ThisIsChujin/assets/icons/play.png">
+    </label>
+    -->
+    <label class="toggle-button">
+        <input id="mute-toggle"  type="checkbox" onchange="toggleMuted(this)">
+        <img id="mute-toggle-mute-icon" class="toggle-button-icon" src="https://toadsworthlp.github.io/ThisIsChujin/assets/icons/muted.png" style="display: none">
+        <img id="mute-toggle-unmute-icon" class="toggle-button-icon" src="https://toadsworthlp.github.io/ThisIsChujin/assets/icons/unmuted.png" style="display: none">
+    </label>
+    <label class="toggle-button">
+        <a href="editor.html" target="_blank" rel="noopener noreferrer"><img class="toggle-button-icon" src="https://toadsworthlp.github.io/ThisIsChujin/assets/icons/new.png"></a>
+    </label>
 </div>
 <script src="js/codec.js"></script>
 <script src="js/index.js"></script>
