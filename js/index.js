@@ -39,7 +39,6 @@ const TYPEWRITER_DIRECTIONS = {
 
     "Portrait": (arg) => {
         return () => {
-            console.log(arg);
             if(PORTRAIT_PATHS.hasOwnProperty(arg)) {
                 setPortraitImage(PORTRAIT_PATHS[arg]);
             } else {
