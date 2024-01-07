@@ -1,6 +1,6 @@
 @font-face {
     font-family: DeterminationMono;
-    src: url(../assets/fonts/DeterminationMono.otf);
+    src: url(https://toadsworthlp.github.io/ThisIsChujin/assets/fonts/DeterminationMono.otf);
 }
 
 body {
@@ -32,7 +32,7 @@ body {
 }
 
 .tape-overlay {
-    background: url("../assets/static/tape-overlay.png") left center;
+    background: url("https://toadsworthlp.github.io/ThisIsChujin/assets/static/tape-overlay.png") left center;
     background-size: 2700%;
     animation: tape-overlay-animation 3s steps(27) infinite;
 }
@@ -45,7 +45,7 @@ body {
     width: 100%;
     height: 100%;
 
-    background: url("../assets/static/static-overlay.png") left center;
+    background: url("https://toadsworthlp.github.io/ThisIsChujin/assets/static/static-overlay.png") left center;
     background-size: 500%;
     animation: static-overlay-animation 0.3s steps(5) infinite;
 }
