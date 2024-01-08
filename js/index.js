@@ -19,7 +19,7 @@ const MUTE_TOGGLE_UNMUTE_ICON_ELEMENT = document.getElementById("mute-toggle-unm
 const UPDATE_FREQUENCY = 1/30;
 
 const INITIAL_STATIC_DELAY = 0.8;
-const MESSAGE_END_STATIC_DELAY = 1.5;
+const MESSAGE_END_STATIC_DELAY = 2.0;
 const MESSAGE_END_REPLAY_OVERLAY_DELAY = 3.0;
 
 const TAPE_OVERLAY_TARGET_OPACITY_UPDATE_FREQUENCY = 1/2;
@@ -29,7 +29,9 @@ const TAPE_OVERLAY_OPACITY_LERP_SPEED = 15;
 
 // TYPEWRITER CONFIGURATION
 
-const TYPEWRITER_AUTO_ADVANCE_DELAY = 2;
+const TYPEWRITER_PROCEED_COOLDOWN = 0.1;
+const TYPEWRITER_BASE_AUTO_ADVANCE_DELAY = 1.5;
+const TYPEWRITER_PER_CHARACTER_AUTO_ADVANCE_DELAY = 0.015;
 const TYPEWRITER_DEFAULT_PAUSE = 1/30;
 const TYPEWRITER_CHARACTER_PAUSE_MULTIPLIERS = {
     ',' : 4,
@@ -330,6 +332,8 @@ let typewriterRemainingPause = 0;
 let typewriterAutoAdvanceTimeout = undefined;
 let typewriterEndStaticDisplayTimeout = undefined;
 let typewriterReplayDisplayTimeout = undefined;
+let typewriterLastProceedPressTime = -TYPEWRITER_PROCEED_COOLDOWN;
+let typewriterCurrentPagePrintableCharacters = 0;
 
 class TypewriterCommand {
     constructor(time, command) {
@@ -357,6 +361,8 @@ function typewriterReset() {
     typewriterCurrentPage = 0;
     typewriterTime = 0;
     typewriterRemainingPause = 0;
+    typewriterLastProceedPressTime = -TYPEWRITER_PROCEED_COOLDOWN;
+    typewriterCurrentPagePrintableCharacters = 0;
 
     clearTimeout(typewriterAutoAdvanceTimeout);
     clearTimeout(typewriterEndStaticDisplayTimeout);
@@ -378,6 +384,7 @@ function typewriterSetPage(text) {
 function typewriterParsePage(text) {
     let commandBuffer = [];
     let time = 0;
+    let printableChars = 0;
 
     let characters = text.split('');
     for (let i = 0; i < characters.length; i++) {
@@ -415,6 +422,7 @@ function typewriterParsePage(text) {
         }
 
         TEXT_WRAPPER_ELEMENT.appendChild(element);
+        printableChars++;
 
         commandBuffer.push(new TypewriterCommand(time, typewriterPrintCommand(element)));
         if (typewriterShouldPlaySound(character)) commandBuffer.push(new TypewriterCommand(time, typewriterPlayTalkSoundCommand(character)));
@@ -424,6 +432,7 @@ function typewriterParsePage(text) {
     }
 
     commandBuffer.push(new TypewriterCommand(time, typewriterPageFinishedCommand()));
+    typewriterCurrentPagePrintableCharacters = printableChars;
     typewriterCommandBuffer = commandBuffer;
 }
 
@@ -502,7 +511,16 @@ function typewriterAddPauseCommand(pauseDuration) {
 
 function typewriterProceedPressed() {
     if(!DISABLE_PROCEED_INPUT) {
+        if(typewriterLastProceedPressTime + TYPEWRITER_PROCEED_COOLDOWN > TIME) return;
+
+        typewriterLastProceedPressTime = TIME;
+
         if(typewriterPageFinished) {
+            if(typewriterAutoAdvanceTimeoutRunningAlready) {
+                clearTimeout(typewriterAutoAdvanceTimeout);
+                typewriterAutoAdvanceTimeoutRunningAlready = false;
+            }
+
             typewriterNextPage();
         } else {
             typewriterSkipToEndOfPage();
@@ -540,7 +558,7 @@ function typewriterAutoAdvance() {
         typewriterAutoAdvanceTimeout = setTimeout(() => {
             typewriterNextPage();
             typewriterAutoAdvanceTimeoutRunningAlready = false;
-        }, TYPEWRITER_AUTO_ADVANCE_DELAY * 1000)
+        }, (TYPEWRITER_BASE_AUTO_ADVANCE_DELAY + TYPEWRITER_PER_CHARACTER_AUTO_ADVANCE_DELAY * typewriterCurrentPagePrintableCharacters) * 1000)
 
         typewriterAutoAdvanceTimeoutRunningAlready = true;
     }
