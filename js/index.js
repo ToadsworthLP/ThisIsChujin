@@ -59,8 +59,40 @@ const TYPEWRITER_DIRECTIONS = {
                 setPortraitImage(arg);
             }
         }
+    },
+
+    "Voice": (arg) => {
+        return () => {
+            if(VOICE_PATHS.hasOwnProperty(arg)) {
+                setVoice(VOICE_PATHS[arg]);
+            } else {
+                setVoice(arg)
+            }
+        }
+    },
+
+    "Music": (arg) => {
+        return () => {
+            if(arg === "Default") {
+                setMusic(DEFAULT_BGM_PATH);
+            }
+            else if(arg === "Pause") {
+                BGM_INSTANCE.pause();
+            }
+            else if(arg === "Play") {
+                BGM_INSTANCE.play();
+            }
+            else if(arg === "Reset") {
+                BGM_INSTANCE.pause();
+                BGM_INSTANCE.currentTime = 0;
+                BGM_INSTANCE.play();
+            }
+            else {
+                setMusic(arg);
+            }
+        }
     }
-}
+};
 
 const DEFAULT_PORTRAIT = "Normal";
 const PORTRAIT_PATHS = {
@@ -85,15 +117,23 @@ const PORTRAIT_PATHS = {
 
 // AUDIO PATHS
 
+const VOICE_PATHS = {
+    "Chujin": "assets/sounds/talk/chujin.wav",
+    "Axis": "assets/sounds/talk/axis.wav",
+    "Ceroba": "assets/sounds/talk/ceroba.wav",
+    "Kanako": "assets/sounds/talk/kanako.wav",
+    "Default": "assets/sounds/talk/default.wav"
+}
+
 const DEFAULT_BGM_PATH = "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/bgm/nothing-but-the-truth.mp3";
-const DEFAULT_TALK_SOUND_PATH = "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/talk/chujin.wav";
+const DEFAULT_TALK_SOUND_PATH = VOICE_PATHS["Chujin"];
 const STATIC_SOUND_PATH = "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/sfx/static.wav";
 const GLITCH_SOUND_PATH = "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/sfx/glitch.wav";
 
 // AUDIO CONFIGURATION
 
 const BGM_BASE_VOLUME = 1.0;
-const TALK_SOUND_BASE_VOLUME = 1.0;
+const TALK_SOUND_BASE_VOLUME = 0.7;
 const STATIC_SOUND_BASE_VOLUME = 0.5;
 const GLITCH_SOUND_BASE_VOLUME = 0.3;
 
@@ -173,6 +213,8 @@ function reset() {
 
     typewriterReset();
     tapeOverlayReset();
+    setVoice(DEFAULT_TALK_SOUND_PATH);
+    setMusic(DEFAULT_BGM_PATH);
 
     init();
 }
@@ -279,6 +321,17 @@ function setAudioMuted(muted) {
 function isAudioMutedByCookie() {
     let cookie = getCookie(AUDIO_MUTED_COOKIE_NAME)
     return cookie === "true";
+}
+
+function setVoice(path) {
+    TALK_SOUND_INSTANCE.src = path;
+}
+
+function setMusic(path) {
+    BGM_INSTANCE.pause();
+    BGM_INSTANCE.currentTime = 0;
+    BGM_INSTANCE.src = path;
+    BGM_INSTANCE.play();
 }
 
 // TAPE OVERLAY
