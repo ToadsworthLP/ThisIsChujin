@@ -122,7 +122,7 @@ const VOICE_PATHS = {
     "Axis": "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/talk/axis.wav",
     "Ceroba": "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/talk/ceroba.wav",
     "Kanako": "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/talk/kanako.wav",
-    "Default": "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/talk/default.wav"
+    "Other": "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/talk/other.wav"
 }
 
 const DEFAULT_BGM_PATH = "https://toadsworthlp.github.io/ThisIsChujin/assets/sounds/bgm/nothing-but-the-truth.mp3";

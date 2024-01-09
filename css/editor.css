@@ -23,6 +23,10 @@ a {
     color: lightgrey;
 }
 
+li {
+    margin-bottom: 8px;
+}
+
 .button-row {
     display: flex;
 }
