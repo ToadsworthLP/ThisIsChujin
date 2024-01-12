@@ -45,10 +45,19 @@ const TYPEWRITER_DIRECTIONS = {
     "Pause": (arg) => {
         let parsedDuration = Number.parseFloat(arg);
         if(Number.isNaN(parsedDuration)) {
-            return () => {}
+            return () => {};
         } else {
             return typewriterAddPauseCommand(parsedDuration);
         }
+    },
+
+    "Speed": (arg) => {
+        let parsedSpeed = Number.parseFloat(arg);
+        if(!Number.isNaN(parsedSpeed)) {
+            typewriterCurrentTalkSpeedMultiplier = parsedSpeed;
+        }
+
+        return () => {};
     },
 
     "Portrait": (arg) => {
@@ -89,6 +98,16 @@ const TYPEWRITER_DIRECTIONS = {
             }
             else {
                 setMusic(arg);
+            }
+        }
+    },
+
+    "Static": (arg) => {
+        return () => {
+            if(arg === "On") {
+                tapeOverlayEnabled = true;
+            } else if(arg === "Off") {
+                tapeOverlayEnabled = false;
             }
         }
     }
@@ -336,10 +355,16 @@ function setMusic(path) {
 
 // TAPE OVERLAY
 
+let tapeOverlayEnabled = true;
 let tapeOverlayNextTargetOpacityUpdate = 0;
 let tapeOverlayTargetOpacity = 0;
 
 function tapeOverlayUpdateOpacity(delta) {
+    if(!tapeOverlayEnabled) {
+        TAPE_OVERLAY_ELEMENT.style.opacity = 0;
+        return;
+    }
+
     if(TIME > tapeOverlayNextTargetOpacityUpdate) {
         tapeOverlayUpdateTargetOpacity();
 
@@ -366,6 +391,7 @@ function tapeOverlayUpdateTargetOpacity() {
 function tapeOverlayReset() {
     tapeOverlayNextTargetOpacityUpdate = 0;
     tapeOverlayTargetOpacity = 0;
+    tapeOverlayEnabled = true;
 }
 
 // PORTRAIT
@@ -387,6 +413,7 @@ let typewriterEndStaticDisplayTimeout = undefined;
 let typewriterReplayDisplayTimeout = undefined;
 let typewriterLastProceedPressTime = -TYPEWRITER_PROCEED_COOLDOWN;
 let typewriterCurrentPagePrintableCharacters = 0;
+let typewriterCurrentTalkSpeedMultiplier = 1.0;
 
 class TypewriterCommand {
     constructor(time, command) {
@@ -416,6 +443,7 @@ function typewriterReset() {
     typewriterRemainingPause = 0;
     typewriterLastProceedPressTime = -TYPEWRITER_PROCEED_COOLDOWN;
     typewriterCurrentPagePrintableCharacters = 0;
+    typewriterCurrentTalkSpeedMultiplier = 1.0;
 
     clearTimeout(typewriterAutoAdvanceTimeout);
     clearTimeout(typewriterEndStaticDisplayTimeout);
@@ -497,7 +525,7 @@ function typewriterGetPause(character) {
         pause = TYPEWRITER_DEFAULT_PAUSE;
     }
 
-    return pause;
+    return pause * (1 / typewriterCurrentTalkSpeedMultiplier);
 }
 
 function typewriterShouldPlaySound(character) {
